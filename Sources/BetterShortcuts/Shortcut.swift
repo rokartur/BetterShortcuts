@@ -733,7 +733,7 @@ extension BetterShortcuts.Shortcut: CustomStringConvertible {
 	*/
 
 	@MainActor
-	var presentableDescription: String {
+	public var presentableDescription: String {
 		if
 			let key,
 			let specialKey = keyToSpecialKeyMapping[key]
