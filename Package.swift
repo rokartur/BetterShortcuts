@@ -15,6 +15,10 @@ let package = Package(
 	targets: [
 		.target(
 			name: "BetterShortcuts"
+		),
+		.testTarget(
+			name: "BetterShortcutsTests",
+			dependencies: ["BetterShortcuts"]
 		)
 	]
 )
