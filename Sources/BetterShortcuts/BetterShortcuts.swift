@@ -404,6 +404,15 @@ public enum BetterShortcuts {
 
 	/**
 	Get the keyboard shortcut for a name.
+
+	Resolution order:
+	1. A user-saved shortcut (current key, then the legacy `KeyboardShortcuts_` key).
+	2. The `Name`'s `default:` shortcut, when nothing has been saved yet — so a
+	   freshly-declared shortcut is *active* immediately, without requiring an
+	   explicit save. Without this a `default:` only takes effect once written,
+	   which silently leaves `onKeyDown`-registered global hot keys unregistered.
+	3. `nil` when the user has explicitly cleared the shortcut (the key holds a
+	   `false` "disabled" marker) — a disable must win over the default.
 	*/
 	public static func getShortcut(for name: Name) -> Shortcut? {
 		// Prefer the current key; fall back to the legacy `KeyboardShortcuts_` key for shortcuts saved before the package rename.
@@ -411,6 +420,14 @@ public enum BetterShortcuts {
 			? userDefaultsKey(for: name)
 			: legacyUserDefaultsKey(for: name)
 
+		// Nothing stored under either key → use the declared default.
+		guard defaults.object(forKey: key) != nil else {
+			return name.defaultShortcut
+		}
+
+		// A value exists. A decodable JSON string is a real shortcut; anything
+		// else (the `false` disabled marker) means the user cleared it, so honor
+		// the disable instead of falling back to the default.
 		guard
 			let data = defaults.string(forKey: key)?.data(using: .utf8),
 			let decoded = try? JSONDecoder().decode(Shortcut.self, from: data)

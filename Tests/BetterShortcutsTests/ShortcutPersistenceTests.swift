@@ -62,4 +62,41 @@ final class ShortcutPersistenceTests: XCTestCase {
 		UserDefaults.standard.set(false, forKey: currentPrefix + rawName)
 		XCTAssertNil(BetterShortcuts.getShortcut(for: shortcutName))
 	}
+
+	// MARK: - `default:` fallback
+
+	func testFallsBackToDefaultWhenUnset() {
+		let def = BetterShortcuts.Shortcut(.a, modifiers: [.command, .control])
+		let name = BetterShortcuts.Name("test_default_\(UUID().uuidString)", default: def)
+		// The `Name` init may seed the default; clear both keys to exercise the
+		// genuine "nothing stored" → default fallback path.
+		UserDefaults.standard.removeObject(forKey: currentPrefix + name.rawValue)
+		UserDefaults.standard.removeObject(forKey: legacyPrefix + name.rawValue)
+
+		XCTAssertEqual(BetterShortcuts.getShortcut(for: name), def)
+
+		UserDefaults.standard.removeObject(forKey: currentPrefix + name.rawValue)
+	}
+
+	func testDisableWinsOverDefault() {
+		let def = BetterShortcuts.Shortcut(.a, modifiers: [.command, .control])
+		let name = BetterShortcuts.Name("test_disabled_\(UUID().uuidString)", default: def)
+		// User explicitly cleared the shortcut → stored `false` must beat the default.
+		UserDefaults.standard.set(false, forKey: currentPrefix + name.rawValue)
+
+		XCTAssertNil(BetterShortcuts.getShortcut(for: name))
+
+		UserDefaults.standard.removeObject(forKey: currentPrefix + name.rawValue)
+	}
+
+	func testSavedValueWinsOverDefault() throws {
+		let def = BetterShortcuts.Shortcut(.a, modifiers: [.command])
+		let saved = BetterShortcuts.Shortcut(.b, modifiers: [.command, .option])
+		let name = BetterShortcuts.Name("test_saved_\(UUID().uuidString)", default: def)
+		UserDefaults.standard.set(try storedJSON(for: saved), forKey: currentPrefix + name.rawValue)
+
+		XCTAssertEqual(BetterShortcuts.getShortcut(for: name), saved)
+
+		UserDefaults.standard.removeObject(forKey: currentPrefix + name.rawValue)
+	}
 }
