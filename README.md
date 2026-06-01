@@ -1,6 +1,6 @@
 # BetterShortcuts
 
-Global keyboard shortcuts for macOS apps. Shared package used by BetterAudio, BetterCap, and BetterCmdTab — one codebase, maintained once.
+Global keyboard shortcuts for macOS apps. Shared package used by BetterAudio, BetterCap, BetterCmdTab, and BetterShutter — one codebase, maintained once.
 
 Derived from [Sindre Sorhus' KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts), which was previously vendored (copy-pasted) into each app.
 
@@ -49,6 +49,28 @@ The recorder warns when a shortcut is already used by another of your shortcuts.
 ```swift
 BetterShortcuts.displayName = { $0.displayName } // your own `Name.displayName`
 ```
+
+### Recorder policy — which combinations are allowed
+
+The recorder validates what the user types. Pick a **mode** to match your app:
+
+| Mode | Shift allowed? | Hold modifier required? | Modifier-free keys? |
+| --- | --- | --- | --- |
+| `.standard` (default) | ✅ | ✅ (⌘/⌥/⌃) | ❌ |
+| `.switcher` | ❌ (reserved) | ✅ | ❌ |
+| `.unrestricted` | ✅ | ❌ | ✅ (e.g. `F5`) |
+
+```swift
+BetterShortcuts.recorderPolicy = .standard          // app-wide (this is the default)
+BetterShortcuts.RecorderCocoa(for: .capture, policy: .unrestricted) // per-recorder override
+```
+
+`.standard` lets users record ⌘⇧-style shortcuts (e.g. `⌘⇧4`) — what most apps want. Cmd-Tab-style
+hold-to-reveal switchers should set `.switcher` at launch to reserve Shift for reverse stepping.
+
+> **Breaking in 0.2.0:** the default policy is now `.standard` (Shift allowed). Previously Shift was
+> always rejected. Switcher apps (e.g. BetterCmdTab) must add `BetterShortcuts.recorderPolicy = .switcher`
+> at launch to keep the old behavior.
 
 ## Storage migration
 

@@ -81,6 +81,15 @@ public enum BetterShortcuts {
 	*/
 	nonisolated(unsafe) public static var displayName: (@Sendable (Name) -> String)?
 
+	/**
+	The app-wide policy controlling which key combinations the recorder UI accepts.
+
+	Defaults to ``RecorderPolicy/standard`` (a hold modifier required, Shift allowed). Cmd-Tab-style
+	switchers should set this to ``RecorderPolicy/switcher`` at launch. Individual recorders can
+	override it via their `policy:` initializer parameter.
+	*/
+	nonisolated(unsafe) public static var recorderPolicy: RecorderPolicy = .standard
+
 	static var allNames: Set<Name> {
 		defaults.dictionaryRepresentation()
 			.compactMap { key, _ -> Name? in

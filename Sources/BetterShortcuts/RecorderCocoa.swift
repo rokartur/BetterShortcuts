@@ -29,6 +29,7 @@ extension BetterShortcuts {
 	public final class RecorderCocoa: NSSearchField, NSSearchFieldDelegate {
 		private let minimumWidth = 135.0
 		private let onChange: ((_ shortcut: Shortcut?) -> Void)?
+		private let policyOverride: RecorderPolicy?
 		private var canBecomeKey = false
 		private var eventMonitor: LocalEventMonitor?
 		/// nonisolated(unsafe) to allow cleanup in deinit
@@ -96,9 +97,11 @@ extension BetterShortcuts {
 		*/
 		public required init(
 			for name: Name,
+			policy: RecorderPolicy? = nil,
 			onChange: ((_ shortcut: Shortcut?) -> Void)? = nil
 		) {
 			self.shortcutName = name
+			self.policyOverride = policy
 			self.onChange = onChange
 
 			// Use a default frame that matches our intrinsic size to prevent zero-size issues
@@ -304,13 +307,12 @@ extension BetterShortcuts {
 					return nil
 				}
 
-				// BetterCmdTab is a hold-to-reveal switcher: the trigger must include
-				// a holdable modifier (Command/Option/Control). Shift is reserved for
-				// reverse-direction stepping, so shortcuts containing Shift are rejected.
-				let holdModifiers: NSEvent.ModifierFlags = [.command, .option, .control]
+				// Accept only combinations allowed by the active recorder policy. The default
+				// (`.standard`) requires a hold modifier (Command/Option/Control) and allows Shift,
+				// so ⌘⇧-style shortcuts work. Switcher apps opt into `.switcher` to reserve Shift.
+				let policy = policyOverride ?? BetterShortcuts.recorderPolicy
 				guard
-					!event.modifiers.contains(.shift),
-					!event.modifiers.intersection(holdModifiers).isEmpty,
+					policy.accepts(modifiers: event.modifiers),
 					let shortcut = Shortcut(event: event)
 				else {
 					NSSound.beep()
