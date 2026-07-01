@@ -26,14 +26,26 @@ extension BetterShortcuts {
 		/// Allow shortcuts with no modifier at all (e.g. function keys, `F5`). Default `false`.
 		public var allowsModifierFree: Bool
 
+		/// Allow recording a shortcut already assigned to another ``Name``, without
+		/// the "already used by …" reassignment alert. Default `false`.
+		///
+		/// Leave `false` for app-wide hotkeys, where one chord should map to one
+		/// function. Set `true` for recorders backing *independent scopes* — e.g.
+		/// per-profile / per-document keys where the same chord legitimately recurs
+		/// under a different ``Name`` (only the system / main-menu conflict checks
+		/// still apply).
+		public var allowsDuplicateShortcuts: Bool
+
 		public init(
 			allowsShift: Bool = true,
 			requiresHoldModifier: Bool = true,
-			allowsModifierFree: Bool = false
+			allowsModifierFree: Bool = false,
+			allowsDuplicateShortcuts: Bool = false
 		) {
 			self.allowsShift = allowsShift
 			self.requiresHoldModifier = requiresHoldModifier
 			self.allowsModifierFree = allowsModifierFree
+			self.allowsDuplicateShortcuts = allowsDuplicateShortcuts
 		}
 
 		/// General-purpose default: a hold modifier is required and Shift is allowed. Good for most apps.

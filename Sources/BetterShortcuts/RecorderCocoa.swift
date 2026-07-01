@@ -366,7 +366,10 @@ extension BetterShortcuts {
 				}
 
 				// Check if the shortcut is already assigned to another app function.
-				if let conflictingName = BetterShortcuts.allNames.first(where: { name in
+				// Skipped when the policy allows duplicates (independent scopes, e.g.
+				// per-profile keys, where the same chord may recur under another name).
+				if !policy.allowsDuplicateShortcuts,
+				   let conflictingName = BetterShortcuts.allNames.first(where: { name in
 					name.rawValue != self.shortcutName.rawValue && BetterShortcuts.getShortcut(for: name) == shortcut
 				}) {
 					// Capture the window reference BEFORE blur() destroys the first-responder chain,
