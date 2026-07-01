@@ -33,6 +33,22 @@ public enum BetterShortcuts {
 		shortcutsForLegacyHandlers.union(shortcutsForStreamHandlers)
 	}
 
+	/**
+	Whether `name` has at least one live key-down/up handler (legacy closure or
+	`events(for:)` stream).
+
+	Only a name with a handler should reserve a global Carbon hot key. A
+	handler-less name that merely persists a shortcut (e.g. one the host app
+	matches locally while a panel is open) must NOT `RegisterEventHotKey`, or the
+	OS would swallow that chord system-wide with nothing to act on it.
+	*/
+	private static func hasHandler(for name: Name) -> Bool {
+		!(legacyKeyDownHandlers[name]?.isEmpty ?? true)
+			|| !(legacyKeyUpHandlers[name]?.isEmpty ?? true)
+			|| !(streamKeyDownHandlers[name]?.isEmpty ?? true)
+			|| !(streamKeyUpHandlers[name]?.isEmpty ?? true)
+	}
+
 	nonisolated(unsafe) private static var isInitialized = false
 
 	nonisolated(unsafe) private static var openMenuObserver: NSObjectProtocol?
@@ -584,14 +600,25 @@ public enum BetterShortcuts {
 			return
 		}
 
-		if let oldShortcut = getShortcut(for: name) {
-			unregister(oldShortcut)
-		}
+		let oldShortcut = getShortcut(for: name)
 
-		register(shortcut)
+		// Persist first so `shortcutsForHandlers` (used by `unregisterIfNeeded`
+		// below) reflects the new binding when reconciling the old chord.
 		defaults.set(encoded, forKey: userDefaultsKey(for: name))
 		// Migrate-on-write: drop the legacy key so future reads hit the current key and no orphan remains.
 		defaults.removeObject(forKey: legacyUserDefaultsKey(for: name))
+
+		// Reconcile the global Carbon registration. Only a name with a live handler
+		// reserves a global hot key: a handler-less name (e.g. a shortcut the host
+		// app matches locally while its own panel is open) must persist WITHOUT
+		// reserving the chord, or the OS swallows it system-wide with no action.
+		// Release the old chord only if no remaining handler still uses it.
+		if let oldShortcut, oldShortcut != shortcut {
+			unregisterIfNeeded(oldShortcut)
+		}
+		if hasHandler(for: name) {
+			register(shortcut)
+		}
 		userDefaultsDidChange(name: name)
 	}
 

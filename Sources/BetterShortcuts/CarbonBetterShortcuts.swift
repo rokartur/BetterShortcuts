@@ -1,12 +1,15 @@
 import Combine
 import AppKit
 import Carbon.HIToolbox
+import os
 
 private func carbonBetterShortcutsEventHandler(eventHandlerCall: EventHandlerCallRef?, event: EventRef?, userData: UnsafeMutableRawPointer?) -> OSStatus {
 	CarbonBetterShortcuts.handleEvent(event)
 }
 
 enum CarbonBetterShortcuts {
+	private static let log = Logger(subsystem: "pro.bettershortcuts.BetterShortcuts", category: "hotkeys")
+
 	private final class HotKey {
 		let shortcut: BetterShortcuts.Shortcut
 		let carbonHotKeyId: Int
@@ -148,7 +151,7 @@ enum CarbonBetterShortcuts {
 			registerError == noErr,
 			let carbonHotKey = eventHotKey
 		else {
-			print("Error registering hotkey \(shortcut):", registerError)
+			log.error("Error registering hotkey \(String(describing: shortcut), privacy: .public): \(registerError)")
 			return
 		}
 
@@ -183,7 +186,7 @@ enum CarbonBetterShortcuts {
 				error == noErr,
 				let eventHotKey
 			else {
-				print("Error registering hotkey \(hotKey.shortcut):", error)
+				log.error("Error registering hotkey \(String(describing: hotKey.shortcut), privacy: .public): \(error)")
 				hotKeys.removeValue(forKey: hotKey.carbonHotKeyId)
 				continue
 			}
