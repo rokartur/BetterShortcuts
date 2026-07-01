@@ -36,16 +36,24 @@ extension BetterShortcuts {
 		/// still apply).
 		public var allowsDuplicateShortcuts: Bool
 
+		/// Refuse a chord listed in ``BetterShortcuts/reservedShortcuts`` (e.g. the
+		/// host's always-on global triggers). Default `false`. Set `true` for
+		/// recorders that must not shadow such a trigger; leave `false` for the
+		/// recorder that *defines* it (so it can still bind that chord).
+		public var rejectsReservedShortcuts: Bool
+
 		public init(
 			allowsShift: Bool = true,
 			requiresHoldModifier: Bool = true,
 			allowsModifierFree: Bool = false,
-			allowsDuplicateShortcuts: Bool = false
+			allowsDuplicateShortcuts: Bool = false,
+			rejectsReservedShortcuts: Bool = false
 		) {
 			self.allowsShift = allowsShift
 			self.requiresHoldModifier = requiresHoldModifier
 			self.allowsModifierFree = allowsModifierFree
 			self.allowsDuplicateShortcuts = allowsDuplicateShortcuts
+			self.rejectsReservedShortcuts = rejectsReservedShortcuts
 		}
 
 		/// General-purpose default: a hold modifier is required and Shift is allowed. Good for most apps.

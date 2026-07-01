@@ -106,6 +106,22 @@ public enum BetterShortcuts {
 	*/
 	nonisolated(unsafe) public static var recorderPolicy: RecorderPolicy = .standard
 
+	/**
+	App-supplied set of chords the recorder must refuse when a recorder opts in via
+	``RecorderPolicy/rejectsReservedShortcuts``.
+
+	Typically the host's always-on global triggers (e.g. a ⌘Tab-style switcher):
+	any *other* slot bound to one of them could never fire, since the host already
+	owns the chord. Evaluated at record time, so it can track a remapped trigger.
+	Set the recorder that *defines* those triggers to `rejectsReservedShortcuts =
+	false` so it can still bind them.
+
+	```swift
+	BetterShortcuts.reservedShortcuts = { Set(App.switcherTriggerChords()) }
+	```
+	*/
+	nonisolated(unsafe) public static var reservedShortcuts: @Sendable () -> Set<Shortcut> = { [] }
+
 	static var allNames: Set<Name> {
 		defaults.dictionaryRepresentation()
 			.compactMap { key, _ -> Name? in

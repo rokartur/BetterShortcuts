@@ -27,4 +27,17 @@ final class RecorderPolicyTests: XCTestCase {
 	func testDefaultGlobalPolicyIsStandard() {
 		XCTAssertEqual(BetterShortcuts.recorderPolicy, .standard)
 	}
+
+	func testRejectsReservedDefaultsFalseAndRoundTrips() {
+		// The presets never opt into reservation rejection.
+		XCTAssertFalse(BetterShortcuts.RecorderPolicy.standard.rejectsReservedShortcuts)
+		XCTAssertFalse(BetterShortcuts.RecorderPolicy.switcher.rejectsReservedShortcuts)
+		XCTAssertFalse(BetterShortcuts.RecorderPolicy.unrestricted.rejectsReservedShortcuts)
+		// Opt-in is preserved through the initializer.
+		XCTAssertTrue(BetterShortcuts.RecorderPolicy(rejectsReservedShortcuts: true).rejectsReservedShortcuts)
+	}
+
+	func testReservedShortcutsProviderDefaultsEmpty() {
+		XCTAssertTrue(BetterShortcuts.reservedShortcuts().isEmpty)
+	}
 }

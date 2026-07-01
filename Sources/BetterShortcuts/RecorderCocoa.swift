@@ -365,6 +365,26 @@ extension BetterShortcuts {
 					}
 				}
 
+				// Reserved by the host app (e.g. an always-on global trigger the app
+				// already owns). A slot bound here could never fire, so warn — but keep
+				// the same "Use Anyway" escape as the system-reserved case above.
+				if policy.rejectsReservedShortcuts, BetterShortcuts.reservedShortcuts().contains(shortcut) {
+					blur()
+
+					let modalResponse = NSAlert.showModal(
+						for: window,
+						title: "This keyboard shortcut is reserved by the app.",
+						message: "It already triggers one of the app's global shortcuts, so a binding here would never fire.",
+						buttonTitles: ["OK", "Use Anyway"]
+					)
+
+					focus()
+
+					guard modalResponse == .alertSecondButtonReturn else {
+						return nil
+					}
+				}
+
 				// Check if the shortcut is already assigned to another app function.
 				// Skipped when the policy allows duplicates (independent scopes, e.g.
 				// per-profile keys, where the same chord may recur under another name).
