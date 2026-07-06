@@ -36,6 +36,7 @@ extension BetterShortcuts {
 		nonisolated(unsafe) private var shortcutsNameChangeObserver: NSObjectProtocol?
 		nonisolated(unsafe) private var windowDidResignKeyObserver: NSObjectProtocol?
 		nonisolated(unsafe) private var windowDidBecomeKeyObserver: NSObjectProtocol?
+		nonisolated(unsafe) private var inputSourceChangeObserver: NSObjectProtocol?
 
 		/**
 		The shortcut name for the recorder.
@@ -134,6 +135,9 @@ extension BetterShortcuts {
 			if let observer = windowDidBecomeKeyObserver {
 				NotificationCenter.default.removeObserver(observer)
 			}
+			if let observer = inputSourceChangeObserver {
+				DistributedNotificationCenter.default().removeObserver(observer)
+			}
 		}
 
 		@available(*, unavailable)
@@ -142,7 +146,7 @@ extension BetterShortcuts {
 		}
 
 		private func setStringValue(name: BetterShortcuts.Name) {
-			stringValue = getShortcut(for: shortcutName).map { "\($0)" } ?? ""
+			stringValue = getShortcut(for: shortcutName).map { $0.presentableDescription } ?? ""
 
 			// If `stringValue` is empty, hide the cancel button to let the placeholder center.
 			showsCancelButton = !stringValue.isEmpty
@@ -157,6 +161,19 @@ extension BetterShortcuts {
 				
 				guard rawName == expectedName else { return }
 
+				MainActor.assumeIsolated { [weak self] in
+					guard let self else { return }
+					self.setStringValue(name: self.shortcutName)
+				}
+			}
+
+			// Redraw the recorded chord when the user switches keyboard layout, so the
+			// displayed key matches the current layout (issue: AZERTY showed QWERTY letters).
+			inputSourceChangeObserver = DistributedNotificationCenter.default().addObserver(
+				forName: Notification.Name(kTISNotifySelectedKeyboardInputSourceChanged as String),
+				object: nil,
+				queue: .main
+			) { [weak self] _ in
 				MainActor.assumeIsolated { [weak self] in
 					guard let self else { return }
 					self.setStringValue(name: self.shortcutName)
@@ -430,7 +447,7 @@ extension BetterShortcuts {
 					BetterShortcuts.setShortcut(nil, for: conflictingName)
 				}
 
-				stringValue = "\(shortcut)"
+				stringValue = shortcut.presentableDescription
 				showsCancelButton = true
 				refreshIntrinsicWidth()
 
