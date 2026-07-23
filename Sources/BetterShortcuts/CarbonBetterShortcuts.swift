@@ -34,6 +34,19 @@ enum CarbonBetterShortcuts {
 
 	nonisolated(unsafe) private static var hotKeys = [Int: HotKey]()
 
+	// Hot key IDs whose key-down was rejected by the modifier check; the matching
+	// key-up must be swallowed too so clients never see an unpaired release.
+	nonisolated(unsafe) private static var suppressedHotKeyIds = Set<Int>()
+
+	// Modifiers that must match the keyboard state when a hot key fires. Caps
+	// Lock and fn are deliberately excluded so they can't block a legitimate
+	// press.
+	private static let validatedModifiers = cmdKey | optionKey | controlKey | shiftKey
+
+	static func heldModifiersMatch(held: Int, registered: Int) -> Bool {
+		held & validatedModifiers == registered & validatedModifiers
+	}
+
 	// `SSKS` is just short for `Sindre Sorhus Keyboard Shortcuts`.
 	// Using an integer now that `UTGetOSTypeFromString("SSKS" as CFString)` is deprecated.
 	// swiftlint:disable:next number_separator
@@ -198,6 +211,7 @@ enum CarbonBetterShortcuts {
 	private static func unregisterHotKey(_ hotKey: HotKey) {
 		UnregisterEventHotKey(hotKey.carbonHotKey)
 		hotKeys.removeValue(forKey: hotKey.carbonHotKeyId)
+		suppressedHotKeyIds.remove(hotKey.carbonHotKeyId)
 	}
 
 	static func unregister(_ shortcut: BetterShortcuts.Shortcut) {
@@ -261,9 +275,23 @@ enum CarbonBetterShortcuts {
 
 		switch Int(GetEventKind(event)) {
 		case kEventHotKeyPressed:
+			// Carbon identifies the hot key only by its registration ID. Don't
+			// trust it blindly: some layout/remapper combinations deliver the
+			// notification with the wrong modifiers held
+			// (rokartur/BetterCmdTab#120), so re-check the actual keyboard state
+			// and swallow the press on mismatch.
+			let held = Int(GetCurrentEventKeyModifiers())
+			guard heldModifiersMatch(held: held, registered: hotKey.shortcut.carbonModifiers) else {
+				suppressedHotKeyIds.insert(hotKey.carbonHotKeyId)
+				log.warning("Ignoring hot key \(String(describing: hotKey.shortcut), privacy: .public): held modifiers \(held) don't match registration")
+				return noErr
+			}
 			hotKey.onKeyDown(hotKey.shortcut)
 			return noErr
 		case kEventHotKeyReleased:
+			guard suppressedHotKeyIds.remove(hotKey.carbonHotKeyId) == nil else {
+				return noErr
+			}
 			hotKey.onKeyUp(hotKey.shortcut)
 			return noErr
 		default:
