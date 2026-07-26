@@ -40,7 +40,10 @@ enum CarbonBetterShortcuts {
 
 	// Modifiers that must match the keyboard state when a hot key fires. Caps
 	// Lock and fn are deliberately excluded so they can't block a legitimate
-	// press.
+	// press, and so are the legacy side-specific bits (rightShiftKey and up):
+	// `GetCurrentKeyModifiers()` reports the generic bit for either side, so a
+	// side bit — if one ever shows up — is ignored rather than read as an extra
+	// modifier that would reject the press.
 	private static let validatedModifiers = cmdKey | optionKey | controlKey | shiftKey
 
 	/// Whether the live keyboard state is consistent with the registration.
@@ -298,6 +301,11 @@ enum CarbonBetterShortcuts {
 				log.warning("Ignoring hot key \(String(describing: hotKey.shortcut), privacy: .public): held modifiers \(held) don't match registration")
 				return noErr
 			}
+			// Carbon doesn't guarantee a release for every press (releasing the
+			// modifier first, or switching apps mid-press, can drop it), which
+			// would strand the ID and swallow a later legitimate key-up. An
+			// accepted press means the previous suppression is over.
+			suppressedHotKeyIds.remove(hotKey.carbonHotKeyId)
 			hotKey.onKeyDown(hotKey.shortcut)
 			return noErr
 		case kEventHotKeyReleased:
