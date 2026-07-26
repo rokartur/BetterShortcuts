@@ -17,8 +17,12 @@ final class HotKeyModifierValidationTests: XCTestCase {
 		XCTAssertFalse(CarbonBetterShortcuts.heldModifiersMatch(held: controlKey | optionKey, registered: controlKey))
 	}
 
-	func testMissingModifierRejected() {
-		XCTAssertFalse(CarbonBetterShortcuts.heldModifiersMatch(held: 0, registered: controlKey))
+	// The handler runs a moment after the press, so a fast release can leave
+	// nothing held by then — that must still fire. Only an unregistered modifier
+	// rejects.
+	func testMissingModifierAccepted() {
+		XCTAssertTrue(CarbonBetterShortcuts.heldModifiersMatch(held: 0, registered: controlKey))
+		XCTAssertTrue(CarbonBetterShortcuts.heldModifiersMatch(held: cmdKey, registered: cmdKey | shiftKey))
 	}
 
 	func testCapsLockAndFnIgnored() {

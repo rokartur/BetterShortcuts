@@ -43,8 +43,14 @@ enum CarbonBetterShortcuts {
 	// press.
 	private static let validatedModifiers = cmdKey | optionKey | controlKey | shiftKey
 
+	/// Whether the live keyboard state is consistent with the registration.
+	///
+	/// Only *extra* modifiers reject: a hot key that fires while a modifier the
+	/// registration never asked for is held is not the user's chord. A missing
+	/// modifier is tolerated because the handler runs a moment after the press,
+	/// so a fast release can legitimately leave nothing held by then.
 	static func heldModifiersMatch(held: Int, registered: Int) -> Bool {
-		held & validatedModifiers == registered & validatedModifiers
+		held & validatedModifiers & ~registered == 0
 	}
 
 	// `SSKS` is just short for `Sindre Sorhus Keyboard Shortcuts`.
@@ -280,7 +286,13 @@ enum CarbonBetterShortcuts {
 			// notification with the wrong modifiers held
 			// (rokartur/BetterCmdTab#120), so re-check the actual keyboard state
 			// and swallow the press on mismatch.
-			let held = Int(GetCurrentEventKeyModifiers())
+			//
+			// `GetCurrentKeyModifiers()` is the live hardware state.
+			// `GetCurrentEventKeyModifiers()` is NOT usable here: it reports the
+			// modifiers of the last event pulled from the app's event queue, and
+			// hot key events don't refresh it — for a background app it stays
+			// stuck at a stale value and would swallow legitimate presses.
+			let held = Int(GetCurrentKeyModifiers())
 			guard heldModifiersMatch(held: held, registered: hotKey.shortcut.carbonModifiers) else {
 				suppressedHotKeyIds.insert(hotKey.carbonHotKeyId)
 				log.warning("Ignoring hot key \(String(describing: hotKey.shortcut), privacy: .public): held modifiers \(held) don't match registration")
