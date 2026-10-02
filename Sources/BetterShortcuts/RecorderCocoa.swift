@@ -218,7 +218,16 @@ extension BetterShortcuts {
 
 		/// :nodoc:
 		public func controlTextDidEndEditing(_ object: Notification) {
-			endRecording()
+			// macOS 27 click tracking ends editing right after focus and immediately re-enters it,
+			// so only stop recording once the field has really lost its field editor.
+			DispatchQueue.main.async { [weak self] in
+				guard let self else { return }
+				guard currentEditor() == nil else {
+					hideCaret()
+					return
+				}
+				endRecording()
+			}
 		}
 
 		/// :nodoc:
