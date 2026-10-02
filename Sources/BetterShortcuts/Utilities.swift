@@ -253,16 +253,6 @@ extension NSEvent {
 }
 
 
-extension NSSearchField {
-	/**
-	Clear the search field.
-	*/
-	func clear() {
-		(cell as? NSSearchFieldCell)?.cancelButtonCell?.performClick(self)
-	}
-}
-
-
 extension NSAlert {
 	/**
 	Show an alert as a window-modal sheet, or as an app-modal (window-independent) alert if the window is `nil` or not given.

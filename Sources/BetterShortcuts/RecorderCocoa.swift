@@ -119,6 +119,8 @@ extension BetterShortcuts {
 
 			// Hide the cancel button when not showing the shortcut so the placeholder text is properly centered. Must be last.
 			self.cancelButton = (cell as? NSSearchFieldCell)?.cancelButtonCell
+			cancelButton?.target = self
+			cancelButton?.action = #selector(clearShortcut)
 
 			setStringValue(name: name)
 
@@ -200,19 +202,18 @@ extension BetterShortcuts {
 			}
 		}
 
-		/// :nodoc:
-		public func controlTextDidChange(_ object: Notification) {
-			if stringValue.isEmpty {
-				saveShortcut(nil)
-			}
+		/// The field only displays the chord; any keystroke reaching the field editor must not edit it.
+		public func control(_ control: NSControl, textShouldBeginEditing fieldEditor: NSText) -> Bool {
+			false
+		}
 
-			showsCancelButton = !stringValue.isEmpty
+		@objc private func clearShortcut() {
+			stringValue = ""
+			saveShortcut(nil)
+			showsCancelButton = false
 			refreshIntrinsicWidth()
-
-			if stringValue.isEmpty {
-				// Hack to ensure that the placeholder centers after the above `showsCancelButton` setter.
-				focus()
-			}
+			// Re-focusing recenters the placeholder after the cancel button is removed.
+			focus()
 		}
 
 		/// :nodoc:
@@ -292,8 +293,9 @@ extension BetterShortcuts {
 					return event
 				}
 
+				// Swallowing a mouse-up inside the field would break the cancel button's click tracking.
 				guard event.isKeyEvent else {
-					return nil
+					return event
 				}
 
 				if
@@ -320,7 +322,7 @@ extension BetterShortcuts {
 						|| event.specialKey == .deleteForward
 						|| event.specialKey == .backspace
 				{
-					clear()
+					clearShortcut()
 					return nil
 				}
 
