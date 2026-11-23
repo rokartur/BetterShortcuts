@@ -76,6 +76,14 @@ To show a label instead of the raw identifier:
 BetterShortcuts.displayName = { $0.displayName } // your own `Name.displayName`
 ```
 
+### Localization
+
+The recorder's placeholder, alerts and the Space key name use
+`String(localized:)` against the app's main bundle, so translate them in the
+app's own `Localizable.xcstrings`. The keys are the English strings in
+`RecorderCocoa.swift` and `"Space"` in `Shortcut.swift`; untranslated keys
+show in English.
+
 ### Recorder policy
 
 The recorder validates what the user types. Pick a mode that matches the app:

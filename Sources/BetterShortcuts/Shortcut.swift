@@ -320,7 +320,7 @@ extension SpecialKey {
 		case .home:
 			"↖"
 		case .space:
-			String(localized: "space_key", table: "Shortcuts").capitalized // This matches what macOS uses.
+			String(localized: "Space") // This matches what macOS uses.
 		case .tab:
 			"⇥"
 		case .pageUp:
