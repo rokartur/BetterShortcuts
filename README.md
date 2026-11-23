@@ -50,6 +50,10 @@ The recorder warns when a shortcut is already used by another of your shortcuts.
 BetterShortcuts.displayName = { $0.displayName } // your own `Name.displayName`
 ```
 
+### Localization
+
+The recorder's placeholder, alerts and the Space key name use `String(localized:)` against your app's main bundle, so translate them in your own `Localizable.xcstrings`. The keys are the English strings in `RecorderCocoa.swift` and `"Space"` in `Shortcut.swift`; untranslated keys show in English.
+
 ### Recorder policy — which combinations are allowed
 
 The recorder validates what the user types. Pick a **mode** to match your app:

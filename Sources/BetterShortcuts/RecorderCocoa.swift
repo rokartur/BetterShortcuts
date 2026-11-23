@@ -109,7 +109,7 @@ extension BetterShortcuts {
 			// when added without constraints (issue #209)
 			super.init(frame: NSRect(x: 0, y: 0, width: minimumWidth, height: 24))
 			self.delegate = self
-			self.placeholderString = "Record Shortcut"
+			self.placeholderString = String(localized: "Record Shortcut")
 			self.alignment = .center
 			(cell as? NSSearchFieldCell)?.searchButtonCell = nil
 
@@ -185,7 +185,7 @@ extension BetterShortcuts {
 
 		private func endRecording() {
 			eventMonitor = nil
-			placeholderString = "Record Shortcut"
+			placeholderString = String(localized: "Record Shortcut")
 			showsCancelButton = !stringValue.isEmpty
 			refreshIntrinsicWidth()
 			restoreCaret()
@@ -279,7 +279,7 @@ extension BetterShortcuts {
 				return shouldBecomeFirstResponder
 			}
 
-			placeholderString = "Press shortcut…"
+			placeholderString = String(localized: "Press shortcut…")
 			showsCancelButton = !stringValue.isEmpty
 			refreshIntrinsicWidth()
 			hideCaret()
@@ -353,7 +353,7 @@ extension BetterShortcuts {
 
 					NSAlert.showModal(
 						for: window,
-						title: String.localizedStringWithFormat("This keyboard shortcut is already used by the menu item “%@”.", menuItem.title)
+						title: String(localized: "This keyboard shortcut is already used by the menu item “\(menuItem.title)”.")
 					)
 
 					focus()
@@ -367,7 +367,7 @@ extension BetterShortcuts {
 
 					NSAlert.showModal(
 						for: window,
-						title: "This keyboard shortcut is not allowed."
+						title: String(localized: "This keyboard shortcut is not allowed.")
 					)
 
 					focus()
@@ -379,10 +379,10 @@ extension BetterShortcuts {
 
 					let modalResponse = NSAlert.showModal(
 						for: window,
-						title: "This keyboard shortcut is used by the system.",
+						title: String(localized: "This keyboard shortcut is used by the system."),
 						// TODO: Add button to offer to open the relevant system settings pane for the user.
-						message: "Most system shortcuts can be changed in “System Settings › Keyboard › Keyboard Shortcuts”.",
-						buttonTitles: ["OK", "Use Anyway"]
+						message: String(localized: "Most system shortcuts can be changed in “System Settings › Keyboard › Keyboard Shortcuts”."),
+						buttonTitles: [String(localized: "OK"), String(localized: "Use Anyway")]
 					)
 
 					focus()
@@ -401,9 +401,9 @@ extension BetterShortcuts {
 
 					let modalResponse = NSAlert.showModal(
 						for: window,
-						title: "This keyboard shortcut is reserved by the app.",
-						message: "It already triggers one of the app's global shortcuts, so a binding here would never fire.",
-						buttonTitles: ["OK", "Use Anyway"]
+						title: String(localized: "This keyboard shortcut is reserved by the app."),
+						message: String(localized: "It already triggers one of the app's global shortcuts, so a binding here would never fire."),
+						buttonTitles: [String(localized: "OK"), String(localized: "Use Anyway")]
 					)
 
 					focus()
@@ -427,14 +427,12 @@ extension BetterShortcuts {
 					blur()
 
 					let alert = NSAlert()
-					alert.messageText = String.localizedStringWithFormat(
-						"This keyboard shortcut is already used by “%@”.",
-						BetterShortcuts.displayName?(conflictingName) ?? conflictingName.rawValue
-					)
-					alert.informativeText = "Do you want to reassign it to this function instead?"
+					let conflictingTitle = BetterShortcuts.displayName?(conflictingName) ?? conflictingName.rawValue
+					alert.messageText = String(localized: "This keyboard shortcut is already used by “\(conflictingTitle)”.")
+					alert.informativeText = String(localized: "Do you want to reassign it to this function instead?")
 					alert.alertStyle = .warning
-					alert.addButton(withTitle: "Cancel")
-					alert.addButton(withTitle: "Reassign")
+					alert.addButton(withTitle: String(localized: "Cancel"))
+					alert.addButton(withTitle: String(localized: "Reassign"))
 
 					let modalResponse: NSApplication.ModalResponse
 					if let alertWindow, alertWindow.isVisible {
